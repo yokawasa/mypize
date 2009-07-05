@@ -1,0 +1,109 @@
+#!/bin/sh
+##
+## install script of mypize
+##
+## Copyright 2009 Yoichi Kawasaki
+##
+##    This program is free software: you can redistribute it and/or modify
+##    it under the terms of the GNU General Public License as published by
+##    the Free Software Foundation, either version 3 of the License, or
+##    (at your option) any later version.
+##
+##    This program is distributed in the hope that it will be useful,
+##    but WITHOUT ANY WARRANTY; without even the implied warranty of
+##    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+##    GNU General Public License for more details.
+##
+##    You should have received a copy of the GNU General Public License
+##    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+scriptversion="2009-07-04.00"
+basename=`basename $0`
+builddirpath=`echo $0 | sed s/${basename}//g`
+myinfile="mypize.in"
+myoutfile="mypize"
+mytmplfiles="plugin_example.cc daemon_example.cc ha_example.cc ha_example.h"
+usage="\
+Usage: $0 -d <inst dir>
+Options:
+  --help        display this help and exit.
+  --version     display version info and exit.
+  -d DIRECTORY  all materials are install like below
+                o mypize ->> DIRECTORY/bin/mypize/mypize
+                o tmpls  ->> DIRECTORY/lib/mypize/*.*
+"
+create_dir() {
+    d=$1
+    if [ ! -d ${d} ]
+    then
+        echo "Creating [DIR] ${d}"
+        mkdir -p "${d}"
+    fi
+}
+
+check_file(){
+    f=$1
+    if [ ! -e ${f} ]
+    then
+        echo "[ERROR] install failure: ${f}"
+        exit 1
+    fi
+}
+
+prefix="";
+while test $# -ne 0; do
+  case $1 in
+    --version) echo ${scriptversion}; exit $?;;
+
+    --help) echo "${usage}"; exit $?;;
+
+    -d) prefix=$2; break;;
+
+    -*) echo "$0: invalid option: $1"; echo "${usage}"; exit 1;;
+
+    *)  break;;
+  esac
+  shift
+done
+
+if [ "${prefix}" == "" ]; then
+    echo "${usage}";
+    exit 1
+fi
+if [ ! -d ${prefix} ]
+then
+    echo "${prefix} DIR NOT exist!!"
+    exit 1
+fi
+
+mybindir="${prefix}/bin/mypize"
+mylibdir="${prefix}/lib/mypize"
+
+create_dir ${mybindir}
+create_dir ${mylibdir}
+sed "s,@PREFIX@,${prefix},g" ${builddirpath}${myinfile} > ${builddirpath}${myoutfile}
+chmod +x ${builddirpath}${myoutfile}
+
+cp -p ${builddirpath}${myoutfile} ${mybindir}
+for i in ${mytmplfiles}
+do
+    cp -p ${builddirpath}tmpl/$i ${mylibdir}
+done
+
+## check installed files
+check_file ${mybindir}/${myoutfile}
+for i in ${mytmplfiles}
+do
+    check_file ${mylibdir}/$i
+done
+
+instmsg="\
+-----------------------------------------------------------------
+Libraries have been installed in:
+  (main script) ${mybindir}/mypize
+  (code templs) ${mylibdir}/*.*
+"
+
+echo "$instmsg"
+exit 0
+

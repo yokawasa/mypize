@@ -1,0 +1,222 @@
+#!/usr/bin/env perl
+##
+## SAMPLE PLUGIN SOURCE GENERATOR
+##
+## Copyright 2009 Yoichi Kawasaki
+##
+##    This program is free software: you can redistribute it and/or modify
+##    it under the terms of the GNU General Public License as published by
+##    the Free Software Foundation, either version 3 of the License, or
+##    (at your option) any later version.
+##
+##    This program is distributed in the hope that it will be useful,
+##    but WITHOUT ANY WARRANTY; without even the implied warranty of
+##    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+##    GNU General Public License for more details.
+##
+##    You should have received a copy of the GNU General Public License
+##    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+use strict;
+use Getopt::Long;
+use Cwd;
+
+my $prefix = "@PREFIX@";
+my $tmpldir = "$prefix/lib/mypize";
+
+my $name = '';
+my $type = '';
+my $modname  = '';
+my $src  = '';
+my $header  = '';
+GetOptions('n=s' => \$name, 't=s' => \$type ) or usage();
+
+## check arguments
+usage() if !$name || ($type ne 'ft' && $type ne 'is' && $type ne 'da' && $type ne 'se');
+
+## decide fullname
+if ($type eq 'ft' ) {
+    $modname = "plugin_${name}";
+    $src = "plugin_${name}.cc";
+    $header  = '';
+}
+if ($type eq 'is' ) {
+    $modname = "is_${name}";
+    $src = "is_${name}.cc";
+    $header  = '';
+}
+if ($type eq 'da' ) {
+    $modname = "daemon_${name}";
+    $src = "daemon_${name}.cc";
+    $header  = '';
+}
+if ($type eq 'se' ) {
+    $modname = "${name}_engine";
+    $src = "ha_${name}.cc";
+    $header = "ha_${name}.h";
+}
+
+## check plugin directory
+if (-d $name) {
+    error("Directory `${name}' already exists. Remove first");
+    exit(1);
+}
+
+## create common data from inline templates
+my $data = join('', <DATA>);
+$data =~ s|%NAME%|$name|sg;
+$data =~ s|%MODNAME%|$modname|sg;
+$data =~ s|%SRC%|$src|sg;
+$data =~ s|%HEADER%|$header|sg;
+my ($mkam,$cfgin,$accfg,$smkam) = ($data =~ m|^(.+)-=#=-\n(.+)-=#=-\n(.+)-=#=-\n(.+)|s);
+
+## create common dirs
+notice("Creating [DIR]  ${name}");
+system("mkdir ${name}");
+notice("Creating [DIR]  ${name}/src");
+system("mkdir ${name}/src");
+notice ("Creating [DIR]  ${name}/config");
+system("mkdir ${name}/config");
+
+## create common files
+notice("Creating [FILE] ${name}/Makefile.am");
+open(FP, ">${name}/Makefile.am") || die;
+print FP $mkam;
+close(FP);
+notice("Creating [FILE] ${name}/configure.in");
+open(FP, ">${name}/configure.in") || die;
+print FP $cfgin;
+close(FP);
+notice("Creating [FILE] ${name}/config/ac_mysql.m4");
+open(FP, ">${name}/config/ac_mysql.m4") || die;
+print FP $accfg;
+close(FP);
+notice("Creating [FILE] ${name}/src/Makefile.am");
+open(FP, ">${name}/src/Makefile.am") || die;
+print FP $smkam;
+close(FP);
+
+## create source code
+create_sample($name, "${tmpldir}/plugin_example.cc", "${name}/src/${src}") if ($type eq 'ft' );
+create_sample($name, "${tmpldir}/is_example.cc", "${name}/src/${src}") if ($type eq 'is' );
+create_sample($name, "${tmpldir}/daemon_example.cc", "${name}/src/${src}") if ($type eq 'da' );
+create_sample($name, "${tmpldir}/ha_example.h", "${name}/src/${header}") if ($type eq 'se' );
+create_sample($name, "${tmpldir}/ha_example.cc", "${name}/src/${src}") if ($type eq 'se' );
+
+## touch missing files
+notice("Creating [FILE] ${name}/NEWS");
+system "touch ${name}/NEWS";
+notice("Creating [FILE] ${name}/README");
+system "touch ${name}/README";
+notice("Creating [FILE] ${name}/AUTHORS");
+system "touch ${name}/AUTHORS";
+notice("Creating [FILE] ${name}/ChangeLog");
+system "touch ${name}/ChangeLog";
+
+## autotools
+notice("Executing autotools");
+system "cd ${name} && aclocal && libtoolize && autoheader && automake --add-missing && autoconf";
+system "rm ${name}/aclocal.m4";
+system "rm -rf ${name}/autom4te.cache";
+notice("mypize done!");
+
+exit(0);
+
+sub usage {
+    print STDERR "Usage: myseize -n <plugin name> -t <plugin type> \n";
+    print STDERR "       <type> - ft : fulltext plugin \n";
+    print STDERR "       <type> - is : information schema plugin \n";
+    print STDERR "       <type> - da : daemon plugin \n";
+    print STDERR "       <type> - se : storage engine plugin \n";
+    exit(1);
+}
+
+sub create_sample {
+    my ($name, $tmpl, $out) = @_;
+    open(IN, $tmpl) or die;
+    my $ls = join '', <IN>;
+    my $name_cap = uc($name);
+    $ls =~ s|example|$name|sg;
+    $ls =~ s|EXAMPLE|$name_cap|sg;
+    close(IN);
+    notice("Creating [FILE] ${out}");
+    open(FP, ">${out}") || die;
+    print FP $ls;
+    close(FP);
+}
+
+sub error{
+    print STDERR "mypize:Error: $_[0].\n";
+}
+
+sub notice{
+    print STDERR "$_[0]\n";
+}
+
+##EOF##
+__DATA__
+INCLUDES =
+SUBDIRS = src
+-=#=-
+dnl For %NAME% MySQL
+AC_INIT(src/%SRC%)
+AC_CONFIG_AUX_DIR(config)
+AM_CONFIG_HEADER(src/%NAME%_config.h)
+AM_INIT_AUTOMAKE("%MODNAME%", 0.1)
+
+AC_PROG_CC
+AC_PROG_CXX
+AC_PROG_CPP
+AC_PROG_GCC_TRADITIONAL
+AC_PROG_LIBTOOL
+LIBTOOL="$LIBTOOL --preserve-dup-deps"
+AC_SUBST(LIBTOOL)dnl
+
+sinclude(config/ac_mysql.m4)
+
+MYSQL_SRC_TEST
+AC_SUBST(MYSQL_INC)
+CXXFLAGS="$CXXFLAGS -fno-implicit-templates -fno-exceptions -fno-rtti"
+
+AC_C_CONST
+AC_TYPE_SIZE_T
+AC_CHECK_HEADERS(limits.h syslimits.h)
+AC_OUTPUT(Makefile src/Makefile)
+-=#=-
+dnl ---------------------------------------------------------------------------
+dnl Macro: MYSQL_SRC
+dnl ---------------------------------------------------------------------------
+AC_DEFUN([MYSQL_SRC_TEST], [
+  AC_MSG_CHECKING(for mysql source code)
+  AC_ARG_WITH(mysql,
+  [[  --with-mysql[=mysql src directory]
+                        Source requir to build %TYPE%.]],
+  [
+    if test -d "$withval/sql"; then
+      MYSQL_SRC="$i/mysql_config"
+    fi
+
+    AC_DEFINE([MYSQL_SRC], [1], [Source directory for MySQL])
+    MYSQL_INC="-I$withval/sql -I$withval/include -I$withval/regex -I$withval"
+    AC_MSG_RESULT(["$withval"])
+  ],
+  [
+    AC_MSG_ERROR(["no mysql source provided"])
+  ])
+])
+
+dnl ---------------------------------------------------------------------------
+dnl Macro: MYSQL_SRC
+dnl ---------------------------------------------------------------------------
+-=#=-
+# Used to build Makefile.in
+
+INCLUDES =   $(MYSQL_INC)
+noinst_HEADERS = %HEADER%
+lib_LTLIBRARIES = %MODNAME%.la
+%MODNAME%_la_SOURCES = %SRC%
+%MODNAME%_la_LIBADD =
+%MODNAME%_la_LDFLAGS =  -module
+%MODNAME%_la_CFLAGS = $(AM_CFLAGS) -DMYSQL_DYNAMIC_PLUGIN
+%MODNAME%_la_CXXFLAGS = $(AM_CFLAGS) -DMYSQL_DYNAMIC_PLUGIN
+

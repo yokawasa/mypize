@@ -42,7 +42,7 @@ cd mypize-<VERSION>
 2) execute install-sh with directory option
 sudo install-sh -d _PATH_TO_INSTALL_
 
-(ex)
+ex.
 $ sudo ./install-sh -d /usr/local
 -----------------------------------------------------------------
 Libraries have been installed in:
@@ -57,7 +57,7 @@ Libraries have been installed in:
 1) create plugin template.
 mypize -n <plugin name> -t <plugin type>
 
-(ex) "hoge" plugin for example
+ex. "hoge" plugin for example
 $ mypize -n hoge -t ft
 Creating [DIR]  hoge
 Creating [DIR]  hoge/src
@@ -83,20 +83,17 @@ mypize done!
 2) configure the plugin
 ./configure  --with-mysql=<mysql src directory> --libdir=<mysql plugin dir>
 
+(configure option)
   --with-mysql (required) : set the directory of MySQL source code
-
   --libdir     (optional) : set the plugin library directory of your MySQL.
                             It is in most cases lib/mysql/plugin
 
-(tip)
 if you want to know your MySQL's plugin directory, use mysql_config's plugindir
 option. it tells you your MySQL's plugin directory.
 
+ex.
  $ /-path-to-/mysql/bin/mysql_config --plugindir
-
 /path-to/mysql/lib/mysql/plugin
-
-(ex)
 ./configure --with-mysql=/usr/local/src/mysql/mysql-5.1.30 --libdir=/home/mysql/lib/mysql/plugin
 
 3) make and install

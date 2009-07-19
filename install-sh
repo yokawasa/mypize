@@ -29,7 +29,7 @@ Options:
   --help        display this help and exit.
   --version     display version info and exit.
   -d DIRECTORY  all materials are install like below
-                o mypize ->> DIRECTORY/bin/mypize/mypize
+                o mypize ->> DIRECTORY/bin/mypize
                 o tmpls  ->> DIRECTORY/lib/mypize/*.*
 "
 create_dir() {
@@ -76,15 +76,15 @@ then
     exit 1
 fi
 
-mybindir="${prefix}/bin/mypize"
+mybindir="${prefix}/bin"
 mylibdir="${prefix}/lib/mypize"
 
 create_dir ${mybindir}
 create_dir ${mylibdir}
 sed "s,@PREFIX@,${prefix},g" ${builddirpath}${myinfile} > ${builddirpath}${myoutfile}
 chmod +x ${builddirpath}${myoutfile}
-
 cp -p ${builddirpath}${myoutfile} ${mybindir}
+rm ${builddirpath}${myoutfile}
 for i in ${mytmplfiles}
 do
     cp -p ${builddirpath}tmpl/$i ${mylibdir}

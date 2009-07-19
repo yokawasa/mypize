@@ -212,7 +212,7 @@ static struct st_mysql_show_var simple_status[]=
 {
   {"static",     (char *)"just a static text",     SHOW_CHAR},
   {"called",     (char *)&number_of_calls, SHOW_LONG},
-  {0,0,0}
+  {0,0,(enum_mysql_show_type)0}
 };
 
 /*

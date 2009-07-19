@@ -116,7 +116,6 @@ system "touch ${name}/ChangeLog";
 ## autotools
 notice("Executing autotools");
 system "cd ${name} && aclocal && libtoolize && autoheader && automake --add-missing && autoconf";
-system "rm ${name}/aclocal.m4";
 system "rm -rf ${name}/autom4te.cache";
 notice("mypize done!");
 
@@ -201,7 +200,7 @@ AC_DEFUN([MYSQL_SRC_TEST], [
     AC_MSG_RESULT(["$withval"])
   ],
   [
-    AC_MSG_ERROR(["no mysql source provided"])
+    AC_MSG_ERROR(["No mysql source provided. Please specify --with-mysql=<mysql source dir>!"])
   ])
 ])
 

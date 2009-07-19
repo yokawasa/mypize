@@ -1,0 +1,105 @@
+/*
+ * README
+ * mypize - MySQL Plugins Sample Code and Build Files Generator
+ */
+
+
+====================================================================
+* Introduction
+====================================================================
+
+mypize is MySQL Plugins Sample Code and Build Files Generator. The idea
+of this script comes from apxs (APache eXtenSion tool)'s template
+generating option. It generates a subdirectory name (see option -n)
+and there several files:
+
+1. source code files
+  *.cc *.h  which can  be used as a template for creating your own
+  modules or as a quick start for playing with the mysql plugin mechanism.
+
+2. autotools files
+  corresponding autotools files for easier build and installing of the module.
+
+mypize supports 4 different type of plugin code: fulltext, information
+schema, daemon, and storage engine plugin. see also mypize help below:
+
+$ mypize
+Usage: myseize -n <plugin name> -t <plugin type>
+       <type> - ft : fulltext plugin
+       <type> - is : information schema plugin
+       <type> - da : daemon plugin
+       <type> - se : storage engine plugin
+
+
+====================================================================
+* Download and Install
+====================================================================
+
+1) extract files from an archive
+tar zxf mypize-<VERSION>.tar.gz
+cd mypize-<VERSION>
+
+2) execute install-sh with directory option
+sudo install-sh -d _PATH_TO_INSTALL_
+
+(ex)
+$ sudo ./install-sh -d /usr/local
+-----------------------------------------------------------------
+Libraries have been installed in:
+  (main script) /usr/local/bin/mypize
+  (code templs) /usr/local/lib/mypize/*.*
+
+
+====================================================================
+* Quick Build and Install with mypize
+====================================================================
+
+1) create plugin template.
+mypize -n <plugin name> -t <plugin type>
+
+(ex) "hoge" plugin for example
+$ mypize -n hoge -t ft
+Creating [DIR]  hoge
+Creating [DIR]  hoge/src
+Creating [DIR]  hoge/config
+Creating [FILE] hoge/Makefile.am
+Creating [FILE] hoge/configure.in
+Creating [FILE] hoge/config/ac_mysql.m4
+Creating [FILE] hoge/src/Makefile.am
+Creating [FILE] hoge/src/plugin_hoge.cc
+Creating [FILE] hoge/NEWS
+Creating [FILE] hoge/README
+Creating [FILE] hoge/AUTHORS
+Creating [FILE] hoge/ChangeLog
+Executing autotools
+Putting files in AC_CONFIG_AUX_DIR, `config'.
+configure.in:5: installing `config/install-sh'
+configure.in:5: installing `config/missing'
+src/Makefile.am: installing `config/depcomp'
+Makefile.am: installing `./INSTALL'
+Makefile.am: installing `./COPYING'
+mypize done!
+
+2) configure the plugin
+./configure  --with-mysql=<mysql src directory> --libdir=<mysql plugin dir>
+
+  --with-mysql (required) : set the directory of MySQL source code
+
+  --libdir     (optional) : set the plugin library directory of your MySQL.
+                            It is in most cases lib/mysql/plugin
+
+(tip)
+if you want to know your MySQL's plugin directory, use mysql_config's plugindir
+option. it tells you your MySQL's plugin directory.
+
+ $ /-path-to-/mysql/bin/mysql_config --plugindir
+
+/path-to/mysql/lib/mysql/plugin
+
+(ex)
+./configure --with-mysql=/usr/local/src/mysql/mysql-5.1.30 --libdir=/home/mysql/lib/mysql/plugin
+
+3) make and install
+make
+sudo make install
+
